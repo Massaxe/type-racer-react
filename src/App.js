@@ -1,11 +1,12 @@
 import React, { Component } from "react";
 import "./App.css";
+import getQuote from "./getQuote";
 
 class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      sentence: "Hello, my name is Gabriel!",
+      sentence: "",
       counter: 0,
       split: [],
       input: "",
@@ -16,10 +17,24 @@ class App extends Component {
   }
 
   componentDidMount() {
-    const split = this.state.sentence.split(" ");
-
-    this.setState({ split: split, start: Date.now() });
+    this.startGame();
   }
+
+  startGame = () => {
+    this.setState({
+      sentence: "",
+      counter: 0,
+      split: [],
+      input: "",
+      win: false,
+      wpm: 0,
+      start: 0
+    });
+    getQuote().then(quote => {
+      const split = quote.data[0].quote.split(" ");
+      this.setState({ split: split, start: Date.now() });
+    });
+  };
 
   renderGame = () => {
     if (this.state.win) {
@@ -27,6 +42,7 @@ class App extends Component {
         <div>
           <p>You won!</p>
           <p>{this.state.wpm} wpm</p>
+          <button onClick={this.startGame}>Restart</button>
         </div>
       );
     }
@@ -44,6 +60,23 @@ class App extends Component {
     );
   };
 
+  getString = () => {
+    const paragraph = [];
+    this.state.split.forEach((word, index) => {
+      paragraph.push(
+        index === this.state.counter ? (
+          <span key={index} className="green">
+            {word}
+          </span>
+        ) : (
+          <span key={index}>{word}</span>
+        )
+      );
+      paragraph.push(<span> </span>);
+    });
+    return paragraph;
+  };
+
   calculateWPM = () => {
     const timeInMilliSeconds = Date.now() - this.state.start;
     let timeInMinutes = timeInMilliSeconds / 1000 / 60;
@@ -52,23 +85,6 @@ class App extends Component {
     const wpm = Math.round(this.state.split.length / timeInMinutes);
 
     this.setState({ wpm: wpm });
-  };
-
-  getString = () => {
-    let paragraph = [];
-    this.state.split.forEach((word, index) => {
-      paragraph.push(
-        index === this.state.counter ? (
-          <span key={word} className="green">
-            {word}
-          </span>
-        ) : (
-          <span key={word}>{word}</span>
-        )
-      );
-      paragraph.push(<span key={index}> </span>);
-    });
-    return paragraph;
   };
 
   onChange = e => {
@@ -94,7 +110,5 @@ class App extends Component {
     return <div className="App">{this.renderGame()}</div>;
   }
 }
-
-
 
 export default App;
